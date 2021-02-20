@@ -32,36 +32,18 @@ start_coding_here:
 	
 	lbu $s0, 0($s1)			# get just first character from first argument, store into $s0
 	
-	# Checks that the argument provided is valid. I don't use bne for comparison because 
-	# while one conditional may not be met, a later one might. Instead, if none of the beq
-	# conditionals are met by the end, simply end the function by jumping to err_msg.
-	# =========================
-	li $t0, 'O'
-	beq $s0, $t0, part1_1
-	# =========================
-	li $t0, 'S'
-	beq $s0, $t0, part1_1
-	# =========================
-	li $t0, 'T'
-	beq $s0, $t0, part1_1
-	# =========================
-	li $t0, 'I'
-	beq $s0, $t0, part1_1
-	# =========================
-	li $t0, 'E'
-	beq $s0, $t0, part1_1
-	# =========================
-	li $t0, 'C'
-	beq $s0, $t0, part1_1
-	# =========================
-	li $t0, 'X'
-	beq $s0, $t0, part1_1
-	# =========================
-	li $t0, 'M'
-	beq $s0, $t0, part1_1
- 	# =========================
- 	
-	j err_msg
+	# Loop to check whether operator is valid
+	li $t0, 0			# int i = 0
+	li $t1, 8			# exit condition: i = 8
+	la $s3, ValidOps
+	check_op_loop:
+		lbu, $t2, 0($s3)		# get character from ValidOps string
+		beq $s0, $t2, part1_1		# If character matches, move on
+		addi $t0, $t0, 1		# i++
+		addi $s3, $s3, 1
+		bne $t0, $t1, check_op_loop	# go back to start of loop as conditional is not met
+	
+	j err_msg			# beq in loop never satisfied so invalid operator supplied
 	
 part1_1:
 	# Testing purposes: print operator
