@@ -63,7 +63,7 @@ part1_1:
 	li $t0, 0			
 	li $t1, 8
 	loop1: 
-		beq $t0, $t1, part2_a
+		beq $t0, $t1, operations
 		addi $t0, $t0, 1		# i++
 		
 		lbu $t2, 0($s2)			# get character from arg2
@@ -81,13 +81,97 @@ part1_1:
 			bne $t3, $t4, loop2
 	# ===========================================================================================	
 	
-	j err_msg # didn't jump to part2_a in loop1 so arg2 must be invalid
+	j err_msg 			# didn't jump to part2_a in loop1 so arg2 must be invalid
 			
-part2_a:	
+operations:
+	lw $s2, arg2_addr		# Modified initial address of $s2 earlier so reset it
+	addi $s2, $s2, 2		# Skip over 0x
+
+	li $t0, 'O'	
+	beq $s0, $t0, opcode
+
+	li $t0, 'S'	
+	beq $s0, $t0, rs
+	
+	li $t0, 'T'	
+	beq $s0, $t0, rt
+	
+	li $t0, 'I'	
+	beq $s0, $t0, immediate
+	
+	li $t0, 'E'	
+	beq $s0, $t0, odd_even
+	
+	li $t0, 'C'	
+	beq $s0, $t0, count_ones
+	
+	li $t0, 'X'	
+	beq $s0, $t0, exponent
+	
+	j mantissa 			# only possible character remaining
+	
+# The eight operations ============================================================================
+opcode: 
+	lbu $t0, 0($s2)
+	addi $t0, $t0, -48		# -48 since 48 is 'A'
+	li $t1, 9			# After subtraction $t0 still > 9, must be a letter
+	bgt $t0, $t1, else
+	j endif				
+	
+	else: 				# character is one of 'ABCDEF', subtract another 7
+		addi $t0, $t0, -7	
+	endif:
+	# This entire block above this line is for ohbtaining the integer value of 1 character -
+	# ASCII value is not what I want. i.e. 'A' would become 10. I will do the same for a second 
+	# character right now, so that I have 8 bits (need 6 for opcode).
+	
+	lbu $t1, 1($s2)
+	addi $t1, $t1, -48		
+	li $t2, 9			
+	bgt $t1, $t2, else2
+	j endif2		
+	
+	else2: 	
+		addi $t1, $t1, -7	
+	endif2:
+	
+	# By now, $t0 and $t1 both contain the numerical equivalents of the 1st and 2nd characters.
+	sll $s0, $t0, 4			# Move 4 left to make room for $t1's binary representation
+	or $s0, $s0, $t1		# Use or to rightmost 4 digits into $s0
+	srl $s0, $s0, 2			# Get rid of rightmost 2 digits since we only want 6
+	
 	li $v0, 1
-	li $a0, 69
+	move $a0, $s0
 	syscall
 
+	li $v0, 10
+	syscall
+
+rs: 
+	li $v0, 10
+	syscall
+
+rt: 
+	li $v0, 10
+	syscall
+
+immediate: 
+	li $v0, 10
+	syscall
+
+odd_even: 
+	li $v0, 10
+	syscall
+
+count_ones: 
+	li $v0, 10
+	syscall
+
+exponent: 
+	li $v0, 10
+	syscall
+
+mantissa: 
 	li $v0, 10
 	syscall
 
