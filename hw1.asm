@@ -178,17 +178,53 @@ operations:
 	
 # The eight operations ============================================================================
 opcode:
+	srl $s3, $s3, 26		# Only want first 6 digits, don't even need a bitmask.
 	
-
+	move $a0, $s3
+	li $v0, 1
+	syscall
 	j end_program
 
 rs: 
+	srl $s3, $s3, 21		# Now the 5 relevant digits should be as far right as possible
+	andi $s3, $s3, 0x001F
+
+	move $a0, $s3
+	li $v0, 1
+	syscall
 	j end_program
 
 rt:
+	srl $s3, $s3, 16	
+	andi $s3, $s3, 0x001F
+	
+	move $a0, $s3
+	li $v0, 1
+	syscall
 	j end_program
 
 immediate:
+	sll $s3, $s3, 16		# Get rid of first 16 digits
+	srl $s3, $s3, 16		# Move digits back into correct place
+
+	# Check if MSB is 1 and perform operations as necessary
+	srl $t0, $s3, 15
+	li $t1, 1
+	bne $t0, $t1, skip_negative_check	
+	
+	lui $t0, 0xFFFF 		# When flipping bits I don't want the upper 16 bits,
+	or $s3, $s3, $t0		# so I flip them to 1 in advance
+	not $s3, $s3			# Two's complement.
+	addi $s3, $s3, 1
+	
+	li $v0, 11
+	li $a0, '-'			# Manually add negative symbol
+	syscall
+	
+	skip_negative_check:
+	move $a0, $s3
+	li $v0, 1
+	syscall
 	j end_program
 
 odd_even: 
