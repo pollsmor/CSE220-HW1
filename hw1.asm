@@ -111,16 +111,16 @@ operations:
 	j mantissa 			# only possible character remaining
 	
 # The eight operations ============================================================================
-opcode: 
+opcode: # We want the 1st-6th digits.
 	lbu $t0, 0($s2)
 	addi $t0, $t0, -48		# -48 since 48 is 'A'
 	li $t1, 9			# After subtraction $t0 still > 9, must be a letter
-	bgt $t0, $t1, else
-	j endif				
+	bgt $t0, $t1, else_opcode
+	j endif_opcode		
 	
-	else: 				# character is one of 'ABCDEF', subtract another 7
+	else_opcode: 				# character is one of 'ABCDEF', subtract another 7
 		addi $t0, $t0, -7	
-	endif:
+	endif_opcode:
 	# This entire block above this line is for ohbtaining the integer value of 1 character -
 	# ASCII value is not what I want. i.e. 'A' would become 10. I will do the same for a second 
 	# character right now, so that I have 8 bits (need 6 for opcode).
@@ -128,17 +128,18 @@ opcode:
 	lbu $t1, 1($s2)
 	addi $t1, $t1, -48		
 	li $t2, 9			
-	bgt $t1, $t2, else2
-	j endif2		
+	bgt $t1, $t2, else2_opcode
+	j endif2_opcode	
 	
-	else2: 	
+	else2_opcode: 	
 		addi $t1, $t1, -7	
-	endif2:
+	endif2_opcode:
 	
 	# By now, $t0 and $t1 both contain the numerical equivalents of the 1st and 2nd characters.
 	sll $s0, $t0, 4			# Move 4 left to make room for $t1's binary representation
-	or $s0, $s0, $t1		# Use or to rightmost 4 digits into $s0
+	or $s0, $s0, $t1		# Use or to get rightmost 4 digits into $s0
 	srl $s0, $s0, 2			# Get rid of rightmost 2 digits since we only want 6
+	andi $s0, $s0, 0x003F		# This bitmask should obtain the 6 digits necessary.
 	
 	li $v0, 1
 	move $a0, $s0
@@ -147,15 +148,143 @@ opcode:
 	li $v0, 10
 	syscall
 
-rs: 
+rs: 	# We want the 7th-11th digits.
+	lbu $t0, 1($s2)
+	addi $t0, $t0, -48		
+	li $t1, 9			
+	bgt $t0, $t1, else_rs
+	j endif_rs			
+	
+	else_rs: 				
+		addi $t0, $t0, -7	
+	endif_rs:
+	
+	lbu $t1, 2($s2)
+	addi $t1, $t1, -48		
+	li $t2, 9			
+	bgt $t1, $t2, else2_rs
+	j endif2_rs	
+	
+	else2_rs: 	
+		addi $t1, $t1, -7	
+	endif2_rs:
+	
+	# By now, $t0 and $t1 both contain the numerical equivalents of the 2nd and 3rd characters.
+	sll $s0, $t0, 4			# Move 4 left to make room for $t1's binary representation
+	or $s0, $s0, $t1		# Use or to get rightmost 4 digits into $s0
+	srl $s0, $s0, 1			# Shift right once to get into correct digits.
+	andi $s0, $s0, 0x001F		# This bitmask should obtain the 5 digits necessary.
+	
+	li $v0, 1
+	move $a0, $s0
+	syscall
+
 	li $v0, 10
 	syscall
 
-rt: 
+rt: 	# We want the 12th-16th digits.
+	lbu $t0, 2($s2)
+	addi $t0, $t0, -48		
+	li $t1, 9			
+	bgt $t0, $t1, else_rt
+	j endif_rt	
+	
+	else_rt: 				
+		addi $t0, $t0, -7	
+	endif_rt:
+	
+	lbu $t1, 3($s2)
+	addi $t1, $t1, -48		
+	li $t2, 9			
+	bgt $t1, $t2, else2_rt
+	j endif2_rt
+	
+	else2_rt: 	
+		addi $t1, $t1, -7	
+	endif2_rt:
+	
+	# By now, $t0 and $t1 both contain the numerical equivalents of the 3rd and 4th characters.
+	sll $s0, $t0, 4			# Move 4 left to make room for $t1's binary representation
+	or $s0, $s0, $t1		# Use or to get rightmost 4 digits into $s0
+	andi $s0, $s0, 0x001F		# This bitmask should obtain the 5 digits necessary.
+	
+	li $v0, 1
+	move $a0, $s0
+	syscall
+	
 	li $v0, 10
 	syscall
 
 immediate: 
+	# We want the last 16 digits.
+	lbu $t0, 4($s2)
+	addi $t0, $t0, -48		
+	li $t1, 9			
+	bgt $t0, $t1, else_imm
+	j endif_imm	
+	
+	else_imm: 				
+		addi $t0, $t0, -7	
+	endif_imm:
+	
+	lbu $t1, 5($s2)
+	addi $t1, $t1, -48		
+	li $t2, 9			
+	bgt $t1, $t2, else2_imm
+	j endif2_imm
+	
+	else2_imm: 	
+		addi $t1, $t1, -7	
+	endif2_imm:
+	
+	lbu $t2, 6($s2)
+	addi $t2, $t2, -48		
+	li $t3, 9			
+	bgt $t2, $t3, else3_imm
+	j endif3_imm
+	
+	else3_imm: 	
+		addi $t2, $t2, -7	
+	endif3_imm:
+	
+	lbu $t3, 7($s2)
+	addi $t3, $t3, -48		
+	li $t4, 9			
+	bgt $t3, $t4, else4_imm
+	j endif4_imm
+	
+	else4_imm: 	
+		addi $t3, $t3, -7	
+	endif4_imm:
+
+	# By now, $t0, $t1, $t2, and $t3 contain the numerical equivalents of the 
+	# 5th-8th characters.
+	sll $s0, $t0, 12		# Move 12 left to make room for remaining 3 chars
+	sll $s1, $t1, 8			# 8
+	sll $s2, $t2, 4			# 4
+	# Now use or to get all 4 characters into $s0.
+	or $s0, $s0, $s1
+	or $s0, $s0, $s2
+	or $s0, $s0, $t3
+	
+	# Check if MSB is 1 and perform operations as necessary
+	srl $t0, $s0, 15 
+	li $t1, 1
+	bne $t0, $t1, continue		
+	
+	lui $t0, 0xFFFF 		# When flipping bits I don't want the upper 16 bits
+	or $s0, $s0, $t0		# to flip from 0 to 1
+	not $s0, $s0			# two's complement!
+	addi $s0, $s0, 1
+	li $v0, 11
+	li $a0, '-'			# manually add negative symbol
+	syscall
+
+	continue:
+	li $v0, 1
+	move $a0, $s0
+	syscall
+	
 	li $v0, 10
 	syscall
 
