@@ -289,10 +289,42 @@ immediate:
 	syscall
 
 odd_even: 
-	li $v0, 10
-	syscall
+	# Obtain the binary representation of the last character.
+	lbu $t0, 7($s2)
+	addi $t0, $t0, -48		
+	li $t1, 9			
+	bgt $t0, $t1, else_oddeven
+	j endif_oddeven	
+	
+	else_oddeven: 				
+		addi $t0, $t0, -7	
+	endif_oddeven:
+
+	andi $t0, $t0, 0x0001		# Apply bitmask to get just the last digit.
+	li $t1, 0
+	beq $t0, $t1, even_msg
+	j odd_msg			# Not even, must be odd
+	
+	even_msg:
+		li $v0, 4
+		la $a0 EvenMsg
+		syscall
+		
+		li $v0, 10
+		syscall
+		
+	odd_msg:
+		li $v0, 4
+		la $a0 OddMsg
+		syscall
+		
+		li $v0, 10
+		syscall
 
 count_ones: 
+	li $s0, 0			# int count = 0
+	
+
 	li $v0, 10
 	syscall
 
