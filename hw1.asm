@@ -228,22 +228,44 @@ immediate:
 	j end_program
 
 odd_even: 
+	sll $s3, $s3, 31			# Only want last digit
+	srl $s3, $s3, 31
+	
+	li $t0, 1
+	bne $s3, $t0, even_msg		# Is even, jump ahead
+	
+	# Is odd
+	li $v0, 4
+	la $a0 OddMsg
+	syscall
+	j end_program
 	
 	even_msg:
 		li $v0, 4
 		la $a0 EvenMsg
 		syscall
-		
 		j end_program
-		
-	odd_msg:
-		li $v0, 4
-		la $a0 OddMsg
-		syscall
-		
-		j end_program
+	
 
 count_ones: 
+	li $t0, 0			# int count = 0
+	li $t1, 32			# Start off shifting 31 times to the right and decrease
+	li $t2, 0			# exit condition: i = 0, to shift 0 times
+	count_loop:
+		beq $t1, $t2, exit_loop		# If rightmost digit was a 0, the program won't stop w/o this.
+		addi $t1, $t1, -1		# Which is why I set $t1 to 32 initially
+		move $t3, $s3			# Copy $s3 into $t3 for shifting
+		srlv $t3, $t3, $t1		# Shift n times to right (n is stored in $t1)
+		andi $t3, $t3, 0x0001		# Only care about rightmost bit
+		beq $t2, $t3, count_loop	# if value equals 0, restart loop
+		
+		addi $t0, $t0, 1		# count++
+		bne $t1, $t2, count_loop	# go back to start of loop as conditional is not met
+	
+	exit_loop:
+	move $a0, $t0
+	li $v0, 1
+	syscall
 	j end_program
 
 exponent: 
