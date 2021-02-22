@@ -5,7 +5,6 @@ EvenMsg: .asciiz "Even"
 OddMsg: .asciiz "Odd"
 ValidOps: .asciiz "OSTIECXM"
 HexChars: .asciiz "0123456789ABCDEF"
-float1: .float 1.0
 
 arg1_addr : .word 0
 arg2_addr : .word 0
@@ -292,7 +291,7 @@ mantissa:
 	li $t1, 32			# Start off shifting 31 times to the right and decrease
 	li $t2, 0			# exit condition: i = 0, to shift 0 times
 	mantissa_loop:
-		beq $t1, $t2, end_program	# If rightmost digit was a 0, the program won't stop w/o this.
+		beq $t1, $t2, end_program		# If rightmost digit was a 0, the program won't stop w/o this.
 		addi $t1, $t1, -1		# Decrement amount of bits to shift right
 		move $t3, $s3			# Copy $s3 into $t3 for shifting
 		srlv $t3, $t3, $t1		
