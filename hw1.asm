@@ -90,69 +90,22 @@ operations:
 	li $s3, 0			# $s3 will combine 4 digits from all 8 characters.
 	
 	# Obtain binary representation of the nth character (not ASCII value) and store into $s3 =====
-	lbu $t0, 0($s2)
-	addi $t0, $t0, -48					
-	blt $t0, $t1, continue		
-	addi $t0, $t0, -7		# Only subtract 7 if ASCII value - 48 is >= 10
-	continue:
-	sll $s3, $t0, 28
+	li $t2, 8			# Controls amount to shift left; i.e. 7 * 4 = 28 for first loop
 	
-	lbu $t0, 1($s2)
-	addi $t0, $t0, -48					
-	blt $t0, $t1, continue_2		
-	addi $t0, $t0, -7		
-	continue_2:
-	sll $t0, $t0, 24	
-	or $s3, $s3, $t0		# Add 2nd character to $s3's 5th-8th digits
-	
-	lbu $t0, 2($s2)
-	addi $t0, $t0, -48					
-	blt $t0, $t1, continue_3		
-	addi $t0, $t0, -7		
-	continue_3:
-	sll $t0, $t0, 20
-	or $s3, $s3, $t0		# Add 3rd character to $s3's 9th-12th digits
-	
-	lbu $t0, 3($s2)
-	addi $t0, $t0, -48					
-	blt $t0, $t1, continue_4	
-	addi $t0, $t0, -7		
-	continue_4:
-	sll $t0, $t0, 16
-	or $s3, $s3, $t0		# Add 4th character to $s3's 13th-16th digits
-	
-	lbu $t0, 4($s2)
-	addi $t0, $t0, -48					
-	blt $t0, $t1, continue_5		
-	addi $t0, $t0, -7		
-	continue_5:
-	sll $t0, $t0, 12
-	or $s3, $s3, $t0		# Add 5th character to $s3's 17th-20th digits
-	
-	lbu $t0, 5($s2)
-	addi $t0, $t0, -48					
-	blt $t0, $t1, continue_6		
-	addi $t0, $t0, -7		
-	continue_6:
-	sll $t0, $t0, 8
-	or $s3, $s3, $t0		# Add 6th character to $s3's 21st-24th digits
-	
-	lbu $t0, 6($s2)
-	addi $t0, $t0, -48					
-	blt $t0, $t1, continue_7		
-	addi $t0, $t0, -7		
-	continue_7:
-	sll $t0, $t0, 4
-	or $s3, $s3, $t0		# Add 7th character to $s3's 25th-28th digits
-	
-	lbu $t0, 7($s2)
-	addi $t0, $t0, -48					
-	blt $t0, $t1, continue_8		
-	addi $t0, $t0, -7		
-	continue_8:
-	or $s3, $s3, $t0		# Add 8th character to $s3's last 4 digits
-	# ===========================================================================================
+	build_hex_loop:
+		addi $t2, $t2, -1		# Lower $t2 by 1 so shift 4 less to the left
+		lbu $t0, 0($s2)
+		addi $t0, $t0, -48					
+		blt $t0, $t1, continue		
+		addi $t0, $t0, -7		# Only subtract 7 if ASCII value - 48 is >= 10
+		continue:
+		sll $t3, $t2, 2			# Multiply $t2 value by 4 as stated above
+		sllv $t0, $t0, $t3		# Shift by amount stored in $t3 in line above
+		or $s3, $s3, $t0		# Add nth character to $s3 at the correct digits
+		addi $s2, $s2, 1		# Increment $s2 so lbu 0($s2) still works next iteration
+		bnez $t2, build_hex_loop	# Once $t2 equals 0, stop the loop and move on
 
+	handle_ops:
 	li $t0, 'O'	
 	beq $s0, $t0, opcode
 
