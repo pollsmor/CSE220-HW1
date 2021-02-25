@@ -108,25 +108,18 @@ operations:
 	handle_ops:
 	li $t0, 'O'	
 	beq $s0, $t0, opcode
-
 	li $t0, 'S'	
 	beq $s0, $t0, rs
-	
 	li $t0, 'T'	
 	beq $s0, $t0, rt
-	
 	li $t0, 'I'	
 	beq $s0, $t0, immediate
-	
 	li $t0, 'E'	
 	beq $s0, $t0, odd_even
-	
 	li $t0, 'C'	
 	beq $s0, $t0, count_ones
-	
 	li $t0, 'X'	
 	beq $s0, $t0, exponent
-	
 	j mantissa 			# only possible character remaining
 	
 # The eight operations ============================================================================
@@ -158,23 +151,8 @@ rt:
 
 immediate:
 	sll $s3, $s3, 16		# Get rid of first 16 digits
-	srl $s3, $s3, 16		# Move digits back into correct place
+	sra $s3, $s3, 16		# Move digits back into correct place with sign extension
 
-	# Check if MSB is 1 and perform operations as necessary
-	srl $t0, $s3, 15
-	li $t1, 1
-	bne $t0, $t1, skip_negative_check	
-	
-	lui $t0, 0xFFFF 		# When flipping bits I don't want the upper 16 bits,
-	or $s3, $s3, $t0		# so I flip them to 1 in advance
-	not $s3, $s3			# Two's complement.
-	addi $s3, $s3, 1
-	
-	li $v0, 11
-	li $a0, '-'			# Manually add negative symbol
-	syscall
-	
-	skip_negative_check:
 	move $a0, $s3
 	li $v0, 1
 	syscall
